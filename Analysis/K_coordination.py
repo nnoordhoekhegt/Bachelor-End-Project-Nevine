@@ -2,15 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-# ============================================================
-# Output directory
-# ============================================================
 output_dir = Path("Oxygen_coordination_histograms")
 output_dir.mkdir(exist_ok=True)
 
-# ============================================================
-# Read XVG file
-# ============================================================
 def read_xvg(filename):
     data = []
 
@@ -26,10 +20,6 @@ def read_xvg(filename):
 
     return np.array(data)
 
-# ============================================================
-# Input files
-# Adjust names if needed
-# ============================================================
 situations = {
     "TBA_unfolded_100KCl": [
         "B_100KCl_run1_K_coordination.xvg",
@@ -50,9 +40,6 @@ situations = {
     ],
 }
 
-# ============================================================
-# Read coordination data
-# ============================================================
 coord_data = {}
 
 for situation, files in situations.items():
@@ -82,10 +69,7 @@ for situation, files in situations.items():
         all_coord.extend(coordinated_oxygens)
 
     coord_data[situation] = np.array(all_coord)
-
-# ============================================================
-# Common axes
-# ============================================================
+    
 all_values = np.concatenate([
     values for values in coord_data.values()
     if len(values) > 0
@@ -114,9 +98,6 @@ for situation, values in coord_data.items():
 
 y_max *= 1.10
 
-# ============================================================
-# Plot each situation separately
-# ============================================================
 for situation, values in coord_data.items():
 
     if len(values) == 0:
