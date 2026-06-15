@@ -1,0 +1,17 @@
+# 0 mM KCl
+gmx_mpi trjcat -f run1/md_center.xtc run2/md_center.xtc run3/md_center.xtc -o combined_TBA_0_fixed.xtc -settime
+gmx_mpi distance -f combined_TBA_0_fixed.xtc -s run1/npt.tpr -n run1/index_corrected.ndx -oall combined_end_to_end.xvg -select 'com of group TBA_START_C1 plus com of group TBA_END_C1'
+echo "DNA" | gmx_mpi trjconv -f combined_TBA_0_fixed.xtc -s run1/npt.tpr -n run1/index.ndx -o peak1_0.xtc -drop combined_end_to_end.xvg -dropunder 2.25 -dropover 2.35
+echo "DNA" | gmx_mpi trjconv -f combined_TBA_0_fixed.xtc -s run1/npt.tpr -n run1/index.ndx -o peak2_0.xtc -drop combined_end_to_end.xvg -dropunder 3.47 -dropover 3.52
+#Cluster
+echo -e "DNA\nDNA" | gmx_mpi cluster -f peak1_0.xtc -s run1/npt.tpr -n run1/index.ndx -method gromos -cutoff 0.30 -cl peak1_clusters.pdb -g peak1_cluster.log -dist peak1_dist.xvg -o peak1_matrix.xpm
+echo -e "DNA\nDNA" | gmx_mpi cluster -f peak2_0.xtc -s run1/npt.tpr -n run1/index.ndx -method gromos -cutoff 0.30 -cl peak2_clusters.pdb -g peak1_cluster.log -dist peak2_dist.xvg -o peak2_matrix.xpm
+
+#100 mM KCl
+gmx_mpi trjcat -f run1/md_center.xtc run2/md_center.xtc run3/md_center.xtc -o combined_TBA_0_fixed.xtc -settime
+gmx_mpi distance -f combined_TBA_0_fixed.xtc -s run1/npt.tpr -n run1/index_corrected.ndx -oall combined_end_to_end.xvg -select 'com of group TBA_START_C1 plus com of group TBA_END_C1'
+echo "DNA" | gmx_mpi trjconv -f combined_TBA_100.xtc -s run1/npt.tpr -n run1/index.ndx -o peak1_100.xtc -drop combined_end_to_end.xvg -dropunder 1.0 -dropover 1.5
+echo "DNA" | gmx_mpi trjconv -f combined_TBA_100.xtc -s run1/npt.tpr -n run1/index.ndx -o peak2_100.xtc -drop combined_end_to_end.xvg -dropunder 3.3 -dropover 3.5
+#Cluster
+echo -e "DNA\nDNA" | gmx_mpi cluster -f peak1_100.xtc -s run1/npt.tpr -n run1/index.ndx -method gromos -cutoff 0.30 -cl peak1_clusters.pdb -g peak1_cluster.log -dist peak1_dist.xvg -o peak1_matrix.xpm -> 63 clusters
+echo -e "DNA\nDNA" | gmx_mpi cluster -f peak2_100.xtc -s run1/npt.tpr -n run1/index.ndx -method gromos -cutoff 0.30 -cl peak2_clusters_100.pdb -g peak2_cluster_100.log -dist peak2_dist_100.xvg -o peak2_matrix_100.xpm -> gave too many clusters so used cutoff 0.3
