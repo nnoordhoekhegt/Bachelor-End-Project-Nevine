@@ -2,15 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-# ============================================================
-# Output directory
-# ============================================================
 output_dir = Path("End_to_end_histograms")
 output_dir.mkdir(exist_ok=True)
 
-# ============================================================
-# Read XVG files
-# ============================================================
+
 def read_xvg(filename):
     data = []
 
@@ -27,9 +22,6 @@ def read_xvg(filename):
     return np.array(data)
 
 
-# ============================================================
-# Define situations
-# ============================================================
 situations = {
     # Unfolded
     "TBA_unfolded_0KCl": [
@@ -64,9 +56,6 @@ situations = {
     ],
 }
 
-# ============================================================
-# Groups
-# ============================================================
 unfolded_keys = [
     "TBA_unfolded_0KCl",
     "TBA_unfolded_100KCl"
@@ -78,9 +67,6 @@ folded_keys = [
     "TBA_folded_100KCl"
 ]
 
-# ============================================================
-# Read all end-to-end distances
-# ============================================================
 distance_data = {}
 
 for situation, files in situations.items():
@@ -109,9 +95,6 @@ for situation, files in situations.items():
 
     distance_data[situation] = np.array(all_distances)
 
-# ============================================================
-# Concatenate data to define shared axes per group
-# ============================================================
 unfolded_values = np.concatenate([
     distance_data[key]
     for key in unfolded_keys
@@ -135,9 +118,7 @@ folded_xmin = np.min(folded_values)
 folded_xmax = np.max(folded_values)
 folded_bins = np.linspace(folded_xmin, folded_xmax, n_bins + 1)
 
-# ============================================================
-# Determine same y-axis per group
-# ============================================================
+
 def get_group_ymax(keys, bins):
 
     ymax = 0
@@ -166,9 +147,6 @@ folded_ymax = get_group_ymax(folded_keys, folded_bins)
 print(f"Unfolded x-axis: {unfolded_xmin:.2f}–{unfolded_xmax:.2f} Å")
 print(f"Folded x-axis: {folded_xmin:.2f}–{folded_xmax:.2f} Å")
 
-# ============================================================
-# Plot each situation separately
-# ============================================================
 for situation, distances in distance_data.items():
 
     if len(distances) == 0:
@@ -192,9 +170,7 @@ for situation, distances in distance_data.items():
     else:
         raise ValueError(f"Unknown situation: {situation}")
 
-    # --------------------------------------------------------
-    # Histogram data
-    # --------------------------------------------------------
+
     hist, bin_edges = np.histogram(
         distances,
         bins=bins,
@@ -203,9 +179,7 @@ for situation, distances in distance_data.items():
 
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
-    # --------------------------------------------------------
-    # Save histogram data
-    # --------------------------------------------------------
+
     np.savetxt(
         output_dir / f"{situation}_end_to_end_histogram.txt",
         np.column_stack((bin_centers, hist)),
@@ -219,9 +193,7 @@ for situation, distances in distance_data.items():
         header="End_to_end_distance_Angstrom"
     )
 
-    # --------------------------------------------------------
-    # Plot histogram
-    # --------------------------------------------------------
+
     plt.figure(figsize=(7, 5))
 
     plt.hist(
