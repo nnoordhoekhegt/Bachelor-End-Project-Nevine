@@ -2,15 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-# ============================================================
-# Output directory
-# ============================================================
 output_dir = Path("RMSF_plots_runs")
 output_dir.mkdir(exist_ok=True)
 
-# ============================================================
-# Function to read XVG files
-# ============================================================
 def read_xvg(filename):
     data = []
 
@@ -27,9 +21,6 @@ def read_xvg(filename):
     return np.array(data)
 
 
-# ============================================================
-# RMSF files for the five situations
-# ============================================================
 situations = {
     # Unfolded TBA
     "TBA_unfolded_0KCl": [
@@ -64,9 +55,6 @@ situations = {
     ],
 }
 
-# ============================================================
-# Groups
-# ============================================================
 unfolded_keys = [
     "TBA_unfolded_0KCl",
     "TBA_unfolded_100KCl"
@@ -80,9 +68,6 @@ folded_keys = [
 
 run_colors = ["red", "green", "blue"]
 
-# ============================================================
-# Read all data
-# ============================================================
 all_data = {}
 
 for situation, files in situations.items():
@@ -104,9 +89,7 @@ for situation, files in situations.items():
 
     all_data[situation] = runs
 
-# ============================================================
-# Function to calculate axis limits for a group
-# ============================================================
+
 def get_group_axis_limits(keys, all_data):
     all_x = []
     all_y = []
@@ -139,9 +122,7 @@ folded_xmin, folded_xmax, folded_ymin, folded_ymax = get_group_axis_limits(
 print(f"Unfolded axes: x = {unfolded_xmin}-{unfolded_xmax}, y = {unfolded_ymin}-{unfolded_ymax}")
 print(f"Folded axes: x = {folded_xmin}-{folded_xmax}, y = {folded_ymin}-{folded_ymax}")
 
-# ============================================================
-# Plot each situation separately
-# ============================================================
+
 for situation, runs in all_data.items():
 
     if len(runs) == 0:
@@ -152,9 +133,6 @@ for situation, runs in all_data.items():
 
     y_values = []
 
-    # --------------------------------------------------------
-    # Plot separate runs
-    # --------------------------------------------------------
     for i, run in enumerate(runs):
 
         x = run[:, 0]
@@ -170,9 +148,6 @@ for situation, runs in all_data.items():
             label=f"run{i+1}"
         )
 
-    # --------------------------------------------------------
-    # Mean and variance/std
-    # --------------------------------------------------------
     y_values = np.array(y_values)
 
     mean_rmsf = np.mean(y_values, axis=0)
@@ -195,9 +170,7 @@ for situation, runs in all_data.items():
         label="std"
     )
 
-    # --------------------------------------------------------
-    # Apply same axes within folded/unfolded group
-    # --------------------------------------------------------
+
     if situation in unfolded_keys:
         plt.xlim(unfolded_xmin, unfolded_xmax)
         plt.ylim(unfolded_ymin, unfolded_ymax)
@@ -206,9 +179,6 @@ for situation, runs in all_data.items():
         plt.xlim(folded_xmin, folded_xmax)
         plt.ylim(folded_ymin, folded_ymax)
 
-    # --------------------------------------------------------
-    # Labels
-    # --------------------------------------------------------
     plt.xlabel("Residue / atom index")
     plt.ylabel("RMSF Å")
     plt.title(situation)
@@ -216,9 +186,6 @@ for situation, runs in all_data.items():
     plt.legend()
     plt.tight_layout()
 
-    # --------------------------------------------------------
-    # Save figure
-    # --------------------------------------------------------
     plt.savefig(
         output_dir / f"{situation}_RMSF_runs.png",
         dpi=300
@@ -230,9 +197,6 @@ for situation, runs in all_data.items():
 
     plt.close()
 
-    # --------------------------------------------------------
-    # Save mean/std data
-    # --------------------------------------------------------
     np.savetxt(
         output_dir / f"{situation}_RMSF_mean_std.txt",
         np.column_stack((x, mean_rmsf, std_rmsf)),
