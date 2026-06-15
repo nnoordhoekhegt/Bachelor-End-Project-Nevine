@@ -1,0 +1,166 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from pathlib import Path
+
+output_dir = Path("TBA_RMSD_plots_extended")
+output_dir.mkdir(exist_ok=True)
+
+rmsd_filename = "rmsd_tba.xvg"
+def read_xvg(filename):
+    data = []
+
+    with open(filename, "r") as f:
+        for line in f:
+            if line.startswith(("#", "@")):
+                continue
+
+            parts = line.split()
+
+            if len(parts) >= 2:
+                data.append([float(parts[0]), float(parts[1])])
+
+    return np.array(data)
+    "TBA_unfolded_0KCl": [
+        f"simulation_TBA/0KCl/run1/Data/{rmsd_filename}",
+        f"simulation_TBA/0KCl/run2/Data/{rmsd_filename}",
+        f"simulation_TBA/0KCl/run3/Data/{rmsd_filename}",
+    ],
+    "TBA_unfolded_100KCl": [
+        f"simulation_TBA/100KCl/run1/Data/{rmsd_filename}",
+        f"simulation_TBA/100KCl/run2/Data/{rmsd_filename}",
+        f"simulation_TBA/100KCl/run3/Data/{rmsd_filename}",
+    ],
+situations = {
+    "TBA_folded_0KCl": [
+        f"simulation_TBA_K_Thrombin/0KCl/run1/Data/{rmsd_filename}",
+        f"simulation_TBA_K_Thrombin/0KCl/run2/Data/{rmsd_filename}",
+        f"simulation_TBA_K_Thrombin/0KCl/run3/Data/{rmsd_filename}",
+    ],
+    "TBA_folded_5KCl": [
+        f"simulation_TBA_K_Thrombin/5KCl/run1/Data/{rmsd_filename}",
+        f"simulation_TBA_K_Thrombin/5KCl/run2/Data/{rmsd_filename}",
+        f"simulation_TBA_K_Thrombin/5KCl/run3/Data/{rmsd_filename}",
+    ],
+    "TBA_folded_100KCl": [
+        f"simulation_TBA_K_Thrombin/100KCl/run1/Data/{rmsd_filename}",
+        f"simulation_TBA_K_Thrombin/100KCl/run2/Data/{rmsd_filename}",
+        f"simulation_TBA_K_Thrombin/100KCl/run3/Data/{rmsd_filename}",
+    ],
+}
+
+unfolded_keys = [
+    "TBA_unfolded_0KCl",
+    "TBA_unfolded_100KCl"
+]
+
+folded_keys = [
+    "TBA_folded_0KCl",
+    "TBA_folded_5KCl",
+    "TBA_folded_100KCl"
+]
+
+run_colors = ["red", "green", "blue"]
+all_data = {}
+
+for situation, files in situations.items():
+
+    runs = []
+
+    for file in files:
+
+        file = Path(file)
+
+        if not file.exists():
+            print(f"Warning: missing file {file}")
+            continue
+
+        data = read_xvg(file)
+
+        if data.size == 0:
+            print(f"Warning: empty file {file}")
+            continue
+
+        time = data[:, 0] / 1000      # ps -> ns
+        rmsd = data[:, 1] * 10        # nm -> Å
+
+        runs.append((time, rmsd))
+
+    all_data[situation] = runs
+def get_axis_limits(keys):
+
+    all_time = []
+    all_rmsd = []
+
+    for key in keys:
+
+        for time, rmsd in all_data[key]:
+
+            all_time.extend(time)
+            all_rmsd.extend(rmsd)
+
+    if len(all_time) == 0:
+        return None
+
+    x_min = np.min(all_time)
+    x_max = np.max(all_time)
+
+    y_min = 0
+    y_max = np.max(all_rmsd) * 1.10
+
+    return x_min, x_max, y_min, y_max
+
+#unfolded_axes = get_axis_limits(unfolded_keys)
+folded_axes = get_axis_limits(folded_keys)
+
+for situation, runs in all_data.items():
+
+    if len(runs) == 0:
+        print(f"Skipping {situation}: no data")
+        continue
+
+    plt.figure(figsize=(9, 5))
+
+    y_values = []
+    for i, (time, rmsd) in enumerate(runs):
+        plt.plot(
+            time,
+            rmsd,
+            color=run_colors[i % len(run_colors)],
+            linewidth=1,
+            label=f"run{i+1}"
+        )
+        y_values.append(rmsd)
+    y_values = np.array(y_values)
+    mean_rmsd = np.mean(y_values, axis=0)
+    std_rmsd = np.std(y_values, axis=0)
+    plt.plot(time, mean_rmsd, color="black", linewidth=2.5, label="mean")
+
+    plt.fill_between(time, mean_rmsd - std_rmsd, mean_rmsd + std_rmsd, color="grey", alpha=0.4, label="std")
+
+    if situation in unfolded_keys and unfolded_axes is not None:
+       plt.xlim(unfolded_axes[0], unfolded_axes[1])
+       plt.ylim(unfolded_axes[2], unfolded_axes[3])
+
+    if situation in folded_keys and folded_axes is not None:
+        plt.xlim(folded_axes[0], folded_axes[1])
+        plt.ylim(folded_axes[2], folded_axes[3])
+
+    plt.xlabel("Time (ns)")
+    plt.ylabel("TBA RMSD (Å)")
+    plt.title(situation)
+
+    plt.legend()
+    plt.tight_layout()
+
+    plt.savefig(output_dir / f"{situation}_TBA_RMSD_mean_std.png", dpi=300)
+    plt.savefig(output_dir / f"{situation}_TBA_RMSD_mean_std.pdf")
+
+    plt.close()
+
+    np.savetxt(
+        output_dir / f"{situation}_TBA_RMSD_mean_std.txt",
+        np.column_stack((time, mean_rmsd, std_rmsd)),
+        header="Time_ns Mean_RMSD_Angstrom Std_RMSD_Angstrom"
+    )
+
+
