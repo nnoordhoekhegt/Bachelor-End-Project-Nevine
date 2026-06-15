@@ -1,0 +1,4 @@
+gmx_mpi trjconv -s md.tpr -f md.xtc -o md_whole.xtc -pbc whole
+gmx_mpi trjconv -s md.tpr -f md_whole.xtc -o md_nojump.xtc -pbc nojump
+gmx_mpi trjconv -s md.tpr -f md_nojump.xtc -o md_center.xtc -center -pbc mol
+
